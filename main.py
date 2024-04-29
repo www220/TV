@@ -76,6 +76,9 @@ class UpdateSource:
                     f"Processing {name}, {total_channels - pbar.n} channels remaining"
                 )
                 infoList = []
+                for url in channelObj.get(name, []):
+                    if url and checkUrlByPatterns(url):
+                        infoList.append((url, None, None))
                 for url, date, resolution in extendResults.get(name, []):
                     if url and checkUrlByPatterns(url):
                         infoList.append((url, None, resolution))
@@ -126,6 +129,18 @@ class UpdateSource:
                                 except Exception as e:
                                     print(f"Error on result {result}: {e}")
                                     continue
+                            results = (
+                                soup.find_all('a', href=True) if soup else []
+                            )
+                            page_find = False
+                            page_link = f'page={page+1}&ch={name}'
+                            for result in results:
+                                if page_link in result['href']:
+                                    page_find = True
+                                    break
+                            if not page_find:
+                                print(f"\nResult no page {page+1}\n")
+                                break
                         except Exception as e:
                             print(f"Error on page {page}: {e}")
                             continue

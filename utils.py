@@ -250,6 +250,13 @@ def filterByDate(data):
                 unrecent_data.append(((url, date, resolution), response_time))
     if len(recent_data) < config.urls_limit:
         recent_data.extend(unrecent_data[: config.urls_limit - len(recent_data)])
+    else:
+        for i in range(len(recent_data)):
+            (url, date, resolution), response_time = recent_data[i]
+            if is_ipv6(url):
+                if i >= config.urls_limit:
+                    recent_data[config.urls_limit-1] = recent_data[i]
+                break
     return recent_data[: config.urls_limit]
 
 
