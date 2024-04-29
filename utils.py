@@ -142,9 +142,10 @@ def getUrlInfo(result):
     """
     Get the url, date and resolution
     """
-    url = date = resolution = None
+    url = date = resolution = channel_name = None
     result_div = [div for div in result.children if div.name == "div"]
     if 1 < len(result_div):
+        channel_name = result_div[0].get_text(strip=True)
         channel_text = result_div[1].get_text(strip=True)
         url_match = re.search(
             r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
@@ -162,7 +163,7 @@ def getUrlInfo(result):
                     else None
                 ),
             )
-    return url, date, resolution
+    return url, date, resolution, channel_name
 
 
 async def getSpeed(url, urlTimeout=5):
@@ -187,7 +188,7 @@ async def sortUrlsBySpeedAndResolution(infoList):
     """
     Sort by speed and resolution
     """
-    response_times = await asyncio.gather(*(getSpeed(url) for url, _, _ in infoList))
+    response_times = await asyncio.gather(*(getSpeed(url) for url, _, _, _ in infoList))
     valid_responses = [
         (info, rt) for info, rt in zip(infoList, response_times) if rt != float("inf")
     ]
@@ -216,7 +217,7 @@ async def sortUrlsBySpeedAndResolution(infoList):
         resolution_weight = default_resolution_weight
 
     def combined_key(item):
-        (_, _, resolution), response_time = item
+        (_, _, resolution, _), response_time = item
         resolution_value = extract_resolution(resolution) if resolution else 0
         return (
             -(response_time_weight * response_time)
@@ -242,18 +243,18 @@ def filterByDate(data):
     start_date = datetime.datetime.now() - datetime.timedelta(days=use_recent_days)
     recent_data = []
     unrecent_data = []
-    for (url, date, resolution), response_time in data:
+    for (url, date, resolution, channel_name), response_time in data:
         if date:
             date = datetime.datetime.strptime(date, "%m-%d-%Y")
             if date >= start_date:
-                recent_data.append(((url, date, resolution), response_time))
+                recent_data.append(((url, date, resolution, channel_name), response_time))
             else:
-                unrecent_data.append(((url, date, resolution), response_time))
+                unrecent_data.append(((url, date, resolution, channel_name), response_time))
     if len(recent_data) < config.urls_limit:
         recent_data.extend(unrecent_data[: config.urls_limit - len(recent_data)])
     else:
         for i in range(len(recent_data)):
-            (url, date, resolution), response_time = recent_data[i]
+            (url, date, resolution, channel_name), response_time = recent_data[i]
             if is_ipv6(url):
                 if i >= config.urls_limit:
                     recent_data[config.urls_limit-1] = recent_data[i]
@@ -267,9 +268,9 @@ def getTotalUrls(data):
     """
     total_urls = []
     if len(data) > config.urls_limit:
-        total_urls = [url for (url, _, _), _ in filterByDate(data)]
+        total_urls = [url for (url, _, _, _), _ in filterByDate(data)]
     else:
-        total_urls = [url for (url, _, _), _ in data]
+        total_urls = [url for (url, _, _, _), _ in data]
     return list(dict.fromkeys(total_urls))
 
 
@@ -349,6 +350,6 @@ async def useAccessibleUrl():
     if speed1 == float("inf") and speed2 == float("inf"):
         return None
     if speed1 < speed2:
-        return baseUrl1
+        return (baseUrl1, "result")
     else:
-        return baseUrl2
+        return (baseUrl2, "resultplus")

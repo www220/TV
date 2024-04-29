@@ -1,6 +1,8 @@
 source_file = "demo.txt"
 final_file = "result.txt"
 favorite_list = [
+    "CCTV-1",
+    "CCTV-5",
     "书画频道",
     "弈坛春秋",
     "天元围棋",
@@ -19,5 +21,4 @@ extend_base_urls = [
     "https://fanmingming.com/txt?url=https://github.moeyy.xyz/https://raw.githubusercontent.com/drangjchen/IPTV/main/M3U/ipv6.m3u",
     "https://fanmingming.com/txt?url=https://github.moeyy.xyz/https://raw.githubusercontent.com/YueChan/Live/main/IPTV.m3u",
     "https://github.moeyy.xyz/https://raw.githubusercontent.com/dxawi/0/main/tvlive.txt",
-    "http://我不是.肥猫.live/TV/tvzb.txt",
 ]

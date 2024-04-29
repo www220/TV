@@ -25,6 +25,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 from tqdm import tqdm
+import re
 
 handler = RotatingFileHandler("result_new.log", encoding="utf-8")
 logging.basicConfig(
@@ -66,7 +67,7 @@ class UpdateSource:
         extendResults = await getChannelsByExtendBaseUrls(channelNames)
         total_channels = len(channelNames)
         pbar = tqdm(total=total_channels)
-        pageUrl = await useAccessibleUrl()
+        (pageUrl,resultClass) = await useAccessibleUrl()
         wait = WebDriverWait(self.driver, 10)
         for cate, channelObj in channelItems.items():
             channelUrls = {}
@@ -78,10 +79,18 @@ class UpdateSource:
                 infoList = []
                 for url in channelObj.get(name, []):
                     if url and checkUrlByPatterns(url):
-                        infoList.append((url, None, None))
+                        infoList.append((url, None, None, name))
                 for url, date, resolution in extendResults.get(name, []):
                     if url and checkUrlByPatterns(url):
-                        infoList.append((url, None, resolution))
+                        infoFind = False
+                        for i in range(len(infoList)):
+                            (check_url, _, _, _) = infoList[i]
+                            if check_url == url:
+                                infoList[i] = (url, None, resolution, name)
+                                infoFind = True
+                                break
+                        if not infoFind:
+                            infoList.append((url, None, resolution, name))
                 if pageUrl:
                     self.driver.get(pageUrl)
                     search_box = wait.until(
@@ -119,13 +128,27 @@ class UpdateSource:
                                 )
                             soup = BeautifulSoup(self.driver.page_source, "html.parser")
                             results = (
-                                soup.find_all("div", class_="result") if soup else []
+                                soup.find_all("div", class_=resultClass) if soup else []
                             )
+                            if 0 < len(results):
+                                result_div = [div for div in results[0].children if div.name == "div"]
+                                if 0 < len(result_div):
+                                    print("\n", result_div[0].get_text(strip=True))
                             for result in results:
                                 try:
-                                    url, date, resolution = getUrlInfo(result)
+                                    url, date, resolution, channel_name = getUrlInfo(result)
+                                    if not channel_name or re.match(f"{name}(?![0-9+])", channel_name, re.IGNORECASE) is None:
+                                        continue
                                     if url and checkUrlByPatterns(url):
-                                        infoList.append((url, date, resolution))
+                                        infoFind = False
+                                        for i in range(len(infoList)):
+                                            (check_url, check_date, check_resolution, _) = infoList[i]
+                                            if check_url == url:
+                                                infoList[i] = (url, date if not check_date else check_date, resolution if not check_resolution else check_resolution, channel_name)
+                                                infoFind = True
+                                                break
+                                        if not infoFind:
+                                            infoList.append((url, date, resolution, channel_name))
                                 except Exception as e:
                                     print(f"Error on result {result}: {e}")
                                     continue
@@ -133,13 +156,11 @@ class UpdateSource:
                                 soup.find_all('a', href=True) if soup else []
                             )
                             page_find = False
-                            page_link = f'page={page+1}&ch={name}'
                             for result in results:
-                                if page_link in result['href']:
+                                if f"page={page+1}" in result['href'] and f"{name}" in result['href']:
                                     page_find = True
                                     break
                             if not page_find:
-                                print(f"\nResult no page {page+1}\n")
                                 break
                         except Exception as e:
                             print(f"Error on page {page}: {e}")
@@ -152,9 +173,9 @@ class UpdateSource:
                         sorted_data = await sortUrlsBySpeedAndResolution(infoList)
                         if sorted_data:
                             channelUrls[name] = getTotalUrls(sorted_data)
-                            for (url, date, resolution), response_time in sorted_data:
+                            for (url, date, resolution, channel_name), response_time in sorted_data:
                                 logging.info(
-                                    f"Name: {name}, URL: {url}, Date: {date}, Resolution: {resolution}, Response Time: {response_time}ms"
+                                    f"Name: {name}, URL_NAME: {channel_name}, URL: {url}, Date: {date}, Resolution: {resolution}, Response Time: {response_time}ms"
                                 )
                         else:
                             channelUrls[name] = filterUrlsByPatterns(channelObj[name])
