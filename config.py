@@ -15,6 +15,9 @@ ipv_type = "all"
 domain_blacklist = ["epg.pw"]
 url_keywords_blacklist = []
 extend_base_urls = [
-    "https://xhdwc.tk/tvlive.txt",
+    "https://fanmingming.com/txt?url=https://live.fanmingming.com/tv/m3u/ipv6.m3u",
+    "https://fanmingming.com/txt?url=https://github.moeyy.xyz/https://raw.githubusercontent.com/drangjchen/IPTV/main/M3U/ipv6.m3u",
+    "https://fanmingming.com/txt?url=https://github.moeyy.xyz/https://raw.githubusercontent.com/YueChan/Live/main/IPTV.m3u",
+    "https://github.moeyy.xyz/https://raw.githubusercontent.com/dxawi/0/main/tvlive.txt",
     "http://我不是.肥猫.live/TV/tvzb.txt",
 ]

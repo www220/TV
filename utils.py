@@ -64,13 +64,14 @@ async def getChannelsByExtendBaseUrls(channel_names):
     Get the channels by extending the base urls
     """
     channels = {}
+    headers = {"User-Agent": "okhttp/3.15"}
     pattern = r"^(.*?),(?!#genre#)(.*?)$"
     sub_pattern = r"_\((.*?)\)|_\[(.*?)\]|频道"
     for base_url in config.extend_base_urls:
         try:
             print(f"Processing extend base url: {base_url}")
             try:
-                response = requests.get(base_url, timeout=30)
+                response = requests.get(base_url, headers=headers, timeout=30)
             except requests.exceptions.Timeout:
                 print(f"Timeout on {base_url}")
                 continue
