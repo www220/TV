@@ -69,6 +69,7 @@ async def getChannelsByExtendBaseUrls(channel_names):
     sub_pattern = r"_\((.*?)\)|_\[(.*?)\]|频道"
     for base_url in config.extend_base_urls:
         try:
+            base_index = config.extend_base_urls.index(base_url)
             print(f"Processing extend base url: {base_url}")
             try:
                 response = requests.get(base_url, headers=headers, timeout=30)
@@ -90,7 +91,7 @@ async def getChannelsByExtendBaseUrls(channel_names):
                         )
                         key = re.sub(sub_pattern, "", key).lower()
                         url = re.match(pattern, line).group(2)
-                        value = (url, None, resolution)
+                        value = (url, None, resolution, f"EXTEND{base_index+1}")
                         if key in link_dict:
                             link_dict[key].append(value)
                         else:
@@ -158,7 +159,7 @@ def getUrlInfo(result):
             date, resolution = (
                 (info_text.partition(" ")[0] if info_text.partition(" ")[0] else None),
                 (
-                    info_text.partition(" ")[2].partition("•")[2]
+                    info_text.partition(" ")[2].partition("•")[2].partition(" ")[0]
                     if info_text.partition(" ")[2].partition("•")[2]
                     else None
                 ),
@@ -197,9 +198,9 @@ async def sortUrlsBySpeedAndResolution(infoList):
         numbers = re.findall(r"\d+x\d+", resolution_str)
         if numbers:
             width, height = map(int, numbers[0].split("x"))
-            return width * height
+            return width * height / 1000.0
         else:
-            return 0
+            return 768 * 576 / 1000.0
 
     default_response_time_weight = 0.5
     default_resolution_weight = 0.5
@@ -250,6 +251,8 @@ def filterByDate(data):
                 recent_data.append(((url, date, resolution, channel_name), response_time))
             else:
                 unrecent_data.append(((url, date, resolution, channel_name), response_time))
+        else:
+            recent_data.append(((url, date, resolution, channel_name), response_time))
     if len(recent_data) < config.urls_limit:
         recent_data.extend(unrecent_data[: config.urls_limit - len(recent_data)])
     else:

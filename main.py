@@ -81,18 +81,18 @@ class UpdateSource:
                 infoList = []
                 for url in channelObj.get(name, []):
                     if url and checkUrlByPatterns(url):
-                        infoList.append((url, None, None, name))
-                for url, date, resolution in extendResults.get(name, []):
+                        infoList.append((url, None, None, name+"_INIT"))
+                for url, date, resolution, channel_name in extendResults.get(name, []):
                     if url and checkUrlByPatterns(url):
                         infoFind = False
                         for i in range(len(infoList)):
-                            (check_url, _, _, _) = infoList[i]
+                            (check_url, _, _, check_name) = infoList[i]
                             if check_url == url:
-                                infoList[i] = (url, None, resolution, name)
+                                infoList[i] = (url, None, resolution, check_name+"|"+name+"_"+channel_name)
                                 infoFind = True
                                 break
                         if not infoFind:
-                            infoList.append((url, None, resolution, name))
+                            infoList.append((url, None, resolution, name+"_"+channel_name))
                 if pageUrl:
                     self.driver.get(pageUrl)
                     search_box = wait.until(
@@ -144,9 +144,9 @@ class UpdateSource:
                                     if url and checkUrlByPatterns(url):
                                         infoFind = False
                                         for i in range(len(infoList)):
-                                            (check_url, check_date, check_resolution, _) = infoList[i]
+                                            (check_url, check_date, check_resolution, check_name) = infoList[i]
                                             if check_url == url:
-                                                infoList[i] = (url, date if not check_date else check_date, resolution if not check_resolution else check_resolution, channel_name)
+                                                infoList[i] = (url, date if not check_date else check_date, resolution if not check_resolution else check_resolution, check_name+"|"+channel_name)
                                                 infoFind = True
                                                 break
                                         if not infoFind:
