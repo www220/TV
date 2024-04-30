@@ -143,7 +143,7 @@ def getUrlInfo(result):
     Get the url, date and resolution
     """
     url = date = resolution = channel_name = None
-    result_div = [div for div in result.children if div.name == "div"]
+    result_div = [div for div in result.children if div.name == "div" and div.get_text(strip=True) and (not div.attrs.get('style') or not 'none' in div.attrs.get('style'))]
     if 1 < len(result_div):
         channel_name = result_div[0].get_text(strip=True)
         channel_text = result_div[1].get_text(strip=True)
@@ -170,7 +170,7 @@ async def getSpeed(url, urlTimeout=5):
     """
     Get the speed of the url
     """
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
         start = time.time()
         try:
             async with session.get(url, timeout=urlTimeout) as response:
@@ -343,13 +343,13 @@ async def useAccessibleUrl():
     """
     Check if the url is accessible
     """
-    baseUrl1 = "https://www.foodieguide.com/iptvsearch/"
+    baseUrl1 = "http://www.foodieguide.com/iptvsearch/"
     baseUrl2 = "http://tonkiang.us/"
     speed1 = await getSpeed(baseUrl1, 30)
     speed2 = await getSpeed(baseUrl2, 30)
     if speed1 == float("inf") and speed2 == float("inf"):
         return None
     if speed1 < speed2:
-        return (baseUrl1, "result")
+        return (baseUrl1, "resultplus")
     else:
         return (baseUrl2, "resultplus")

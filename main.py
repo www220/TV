@@ -45,6 +45,8 @@ class UpdateSource:
         options.add_experimental_option("useAutomationExtension", False)
         options.add_argument("blink-settings=imagesEnabled=false")
         options.add_argument("--log-level=3")
+        options.add_argument("--ignore-certificate-errors")
+        options.add_argument("--ignore-ssl-errors")
         driver = webdriver.Chrome(options=options)
         stealth(
             driver,
@@ -131,13 +133,13 @@ class UpdateSource:
                                 soup.find_all("div", class_=resultClass) if soup else []
                             )
                             if 0 < len(results):
-                                result_div = [div for div in results[0].children if div.name == "div"]
+                                result_div = [div for div in results[0].children if div.name == "div" and div.get_text(strip=True) and (not div.attrs.get('style') or not 'none' in div.attrs.get('style'))]
                                 if 0 < len(result_div):
                                     print("\n", result_div[0].get_text(strip=True))
                             for result in results:
                                 try:
                                     url, date, resolution, channel_name = getUrlInfo(result)
-                                    if not channel_name or re.match(f"{name}(?![0-9+])", channel_name, re.IGNORECASE) is None:
+                                    if not channel_name or re.match(re.escape(f"{name}")+"(?![0-9+])", channel_name, re.IGNORECASE) is None:
                                         continue
                                     if url and checkUrlByPatterns(url):
                                         infoFind = False
