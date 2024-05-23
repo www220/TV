@@ -139,7 +139,7 @@ class UpdateSource:
                             for result in results:
                                 try:
                                     url, date, resolution, channel_name = getUrlInfo(result)
-                                    if not channel_name or re.match(re.escape(f"{name}")+"(?![0-9+])", channel_name, re.IGNORECASE) is None:
+                                    if not channel_name or re.match(re.escape(f"{name}")+r"(?![0-9kK+\-])", channel_name, re.IGNORECASE) is None:
                                         continue
                                     if url and checkUrlByPatterns(url):
                                         infoFind = False

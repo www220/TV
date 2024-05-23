@@ -67,6 +67,11 @@ async def getChannelsByExtendBaseUrls(channel_names):
     headers = {"User-Agent": "okhttp/3.15"}
     pattern = r"^(.*?),(?!#genre#)(.*?)$"
     sub_pattern = r"_\((.*?)\)|_\[(.*?)\]|频道"
+    key_conv = {"cctv-1":"cctv1","cctv-2":"cctv2","cctv-3":"cctv3","cctv-4":"cctv4","cctv-5":"cctv5","cctv-5+":"cctv5+",
+                "cctv-6":"cctv6","cctv-7":"cctv7","cctv-8":"cctv8","cctv-9":"cctv9","cctv-10":"cctv10","cctv-11":"cctv11",
+                "cctv-12":"cctv12","cctv-13":"cctv13","cctv-14":"cctv14","cctv-15":"cctv15","cctv-16":"cctv16","cctv-17":"cctv17",
+                "cctv-4k":"cctv4k","cctv-8k":"cctv8k","cctv5plus":"cctv5+","旅游卫视":"海南卫视","卡酷动画":"卡酷少儿","北京卡酷少儿":"卡酷少儿",
+                "上海五星体育":"五星体育","newtv超级体育":"超级体育","newtv精品体育":"精品体育"}
     for base_url in config.extend_base_urls:
         try:
             base_index = config.extend_base_urls.index(base_url)
@@ -90,6 +95,8 @@ async def getChannelsByExtendBaseUrls(channel_names):
                             else None
                         )
                         key = re.sub(sub_pattern, "", key).lower()
+                        key = key.partition(" ")[0]
+                        key = key_conv.get(key, key).lower()
                         url = re.match(pattern, line).group(2)
                         value = (url, None, resolution, f"EXTEND{base_index+1}")
                         if key in link_dict:
